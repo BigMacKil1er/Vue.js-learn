@@ -25,7 +25,13 @@
                     <ul>
                         <li v-for="detail in details">{{ detail }}</li>
                     </ul>
-                    <div v-for="variant in variants" :key="variant.id" @mouseover="updateImage(variant.image)">{{ variant.color }}</div>
+                    <div 
+                    v-for="variant in variants" 
+                    :key="variant.id" 
+                    @mouseover="updateImage(variant.image)"
+                    class="color-circle" 
+                    :style="{ backgroundColor: variant.color }"
+                    >{{ variant.color }}</div>
                     <!-- <div v-for="size in sizes">{{ size.size }}</div> -->
                     <button class="button" @click="addToCard">Add to Cart</button>
                     <button class="button" @click="removeToCard">Remove item</button>

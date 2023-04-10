@@ -9,7 +9,7 @@ createApp({
             description: 'These socks are soft and smell nice',
             image: './assets/images/socks_green.jpg',
             url: 'https://vk.com/variar',
-            inStock: true,
+            inStock: false,
             details: ['50% cotton', '30% wool', '20% polyester'],
             variants: [
                 { id: 2234, color: 'green', image: './assets/images/socks_green.jpg' },
