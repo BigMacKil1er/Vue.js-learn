@@ -21,9 +21,7 @@ app.component(
                     <p v-if="inStock">In Stock</p>
                     <p v-else>Out in Stock</p>
                     <p>Shipping: {{ shipping }}</p>
-                    <ul>
-                        <li v-for="detail in details">{{ detail }}</li>
-                    </ul>   
+                    <product-details :details='details'></product-details> 
                     <div 
                     v-for="(variant, index) in variants" 
                     :key="variant.id" 
@@ -33,7 +31,6 @@ app.component(
                     ></div>
                     <!-- <div v-for="size in sizes">{{ size.size }}</div> -->
                     <button class="button" :disabled="!inStock" :class="{ disabledButton: !inStock }" @click="addToCard">Add to Cart</button>
-                    <button class="button" @click="removeToCard">Remove item</button>
                 </div>
             </div>
         </div>`,
@@ -55,12 +52,7 @@ app.component(
         },
         methods: {
             addToCard(){
-                this.cart += 1
-            },
-            removeToCard(){
-                if(this.cart !== 0) {
-                    this.cart -=1
-                }
+                this.$emit('add-to-cart', this.variants[this.selectedVariant].id)
             },
             updateVariant(index){
                 this.selectedVariant = index
