@@ -5,7 +5,8 @@ export default {
     return {
       ticker: "",
       tickets: [],
-      sel: null
+      sel: null,
+      graph: []
     }
   },
   methods: {
@@ -19,11 +20,26 @@ export default {
           const data = await fet.json();
           console.log(data);
           this.tickets.find(item => item.name === newTicker.name).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2)
+          if (this.sel?.name === newTicker.name) {
+            this.graph.push(data.USD)
+          }
+          
       }, 3000)
       this.ticker = ''
     },
     del(tickerToRemove) {
       this.tickets = this.tickets.filter(t => t !== tickerToRemove)
+    },
+    getPercentsFromGraph(){
+      let max = Math.max(...this.graph)
+      let min = Math.min(...this.graph)
+      return this.graph.map(
+        price => 5 + ((price-min) * 95) / (max-min)
+      )
+    },
+    select(ticker){
+      this.sel = ticker
+      this.graph = []
     }
   },
   
@@ -66,8 +82,8 @@ export default {
             <span @click="ticker = 'BCH'" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
               BCH
             </span>
-            <span @click="ticker = 'CHD'" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              CHD
+            <span @click="ticker = 'ETH'" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
+              ETH
             </span>
           </div>
           <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
@@ -100,7 +116,7 @@ export default {
           <div
             v-for="t of tickets"
             :key="t"
-            @click="sel = t"
+            @click="select(t)"
             :class="{
               'border-4': sel === t
             }"
@@ -143,16 +159,10 @@ export default {
       </h3>
       <div class="flex items-end border-gray-600 border-b border-l h-64">
         <div
-          class="bg-purple-800 border w-10 h-24"
-        ></div>
-        <div
-          class="bg-purple-800 border w-10 h-32"
-        ></div>
-        <div
-          class="bg-purple-800 border w-10 h-48"
-        ></div>
-        <div
-          class="bg-purple-800 border w-10 h-16"
+          v-for="(bar, idx) in getPercentsFromGraph()"
+          :key="idx"
+          :style="{ height: `${bar}%` }"
+          class="bg-purple-800 border w-10"
         ></div>
       </div>
       <button
