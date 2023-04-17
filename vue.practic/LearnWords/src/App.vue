@@ -1,4 +1,6 @@
 <script>
+import { parse } from '@vue/compiler-dom'
+
 export default {
   name: 'App',
   data(){
@@ -12,23 +14,27 @@ export default {
     }
   },
   methods: {
+    serverRequest(tickerName){
+      setInterval(async()=> {
+        const fet = await fetch(
+          `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=c0af29b098273ecec419bc70f6b7c23712ea544831a579c714ddceddfe12e7f7`
+          );
+          const data = await fet.json();
+          this.tickets.find(item => item.name === tickerName).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2)
+          if (this.sel?.name === tickerName) {
+            this.graph.push(data.USD)
+          }
+          
+      }, 3000)
+    },
     add(ticker) {
       const newTicker = {name: ticker, price: '-'}
       if (ticker.length && (ticker.toUpperCase() in this.checkData)) {
         if (this.tickets.findIndex(item => item.name === ticker) === -1) {
         this.tickets.push(newTicker)
+        this.serverRequest(newTicker)
+        localStorage.setItem('dataAboutCrypto', JSON.stringify(this.tickets))
         this.addedTickers = false
-        setInterval(async()=> {
-        const fet = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api_key=c0af29b098273ecec419bc70f6b7c23712ea544831a579c714ddceddfe12e7f7`
-          );
-          const data = await fet.json();
-          this.tickets.find(item => item.name === newTicker.name).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2)
-          if (this.sel?.name === newTicker.name) {
-            this.graph.push(data.USD)
-          }
-          
-      }, 3000)
       } else {
         this.addedTickers = true
       }
@@ -39,6 +45,7 @@ export default {
     },
     del(tickerToRemove) {
       this.tickets = this.tickets.filter(t => t !== tickerToRemove)
+      localStorage.setItem('dataAboutCrypto', JSON.stringify(this.tickets))
     },
     getPercentsFromGraph(){
       let max = Math.max(...this.graph)
@@ -57,6 +64,14 @@ export default {
     }
   },
   created: async function () {
+    const receivedFromLocalStorage = await localStorage.getItem('dataAboutCrypto')
+    if (receivedFromLocalStorage) {
+      this.tickets = await JSON.parse(receivedFromLocalStorage)
+      this.tickets.forEach(ticker => {
+        this.serverRequest(ticker.name)
+      })
+    }
+      // this.tickets = localStorage.getItem('dataAboutCrypto')
       const fet2 = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`);
       const data2 = await fet2.json();
       this.checkData = data2.Data
