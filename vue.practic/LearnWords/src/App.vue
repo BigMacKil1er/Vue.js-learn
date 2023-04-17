@@ -10,7 +10,9 @@ export default {
       sel: null,
       graph: [],
       addedTickers: false,
-      checkData: null
+      checkData: null,
+      page: 1,
+      filter: ''
     }
   },
   methods: {
@@ -32,6 +34,7 @@ export default {
       if (ticker.length && (ticker.toUpperCase() in this.checkData)) {
         if (this.tickets.findIndex(item => item.name === ticker) === -1) {
         this.tickets.push(newTicker)
+        this.filter = ''
         this.serverRequest(newTicker)
         localStorage.setItem('dataAboutCrypto', JSON.stringify(this.tickets))
         this.addedTickers = false
@@ -61,6 +64,9 @@ export default {
     autocomplite(ticker){
       let fil = Object.keys(this.checkData).filter(item => item.indexOf(ticker.toUpperCase()) !== -1)
       return fil.sort((a, b) => a.length - b.length)
+    },
+    filteredTickers(){
+      return this.tickets.filter(ticker => ticker.name.includes(this.filter.toUpperCase()))
     }
   },
   created: async function () {
@@ -152,9 +158,16 @@ export default {
     </section>
       <template v-if="tickets.length">
         <hr class="w-full border-t border-gray-600 my-4" />
+        <div>
+          <button class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Вперед</button>
+          <button class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">Назад</button>
+          <div>Фильтр: <input v-model="filter" type="text" class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"></div>
+        </div>
+        
+        <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="t of tickets"
+            v-for="t of filteredTickers()"
             :key="t"
             @click="select(t)"
             :class="{
