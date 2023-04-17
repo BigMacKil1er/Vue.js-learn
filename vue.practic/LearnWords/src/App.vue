@@ -6,25 +6,35 @@ export default {
       ticker: "",
       tickets: [],
       sel: null,
-      graph: []
+      graph: [],
+      addedTickers: false,
+      checkData: null
     }
   },
   methods: {
-    add() {
-      const newTicker = {name: this.ticker, price: '-'}
-      this.tickets.push(newTicker)
-      setInterval(async()=> {
+    add(ticker) {
+      const newTicker = {name: ticker, price: '-'}
+      if (ticker.length && (ticker.toUpperCase() in this.checkData)) {
+        if (this.tickets.findIndex(item => item.name === ticker) === -1) {
+        this.tickets.push(newTicker)
+        this.addedTickers = false
+        setInterval(async()=> {
         const fet = await fetch(
           `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api_key=c0af29b098273ecec419bc70f6b7c23712ea544831a579c714ddceddfe12e7f7`
           );
           const data = await fet.json();
-          console.log(data);
           this.tickets.find(item => item.name === newTicker.name).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2)
           if (this.sel?.name === newTicker.name) {
             this.graph.push(data.USD)
           }
           
       }, 3000)
+      } else {
+        this.addedTickers = true
+      }
+      }
+      
+      
       this.ticker = ''
     },
     del(tickerToRemove) {
@@ -40,8 +50,22 @@ export default {
     select(ticker){
       this.sel = ticker
       this.graph = []
+    },
+    autocomplite(ticker){
+      let fil = Object.keys(this.checkData).filter(item => item.indexOf(ticker.toUpperCase()) !== -1)
+      return fil.sort((a, b) => a.length - b.length)
     }
   },
+  created: async function () {
+      const fet2 = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`);
+      const data2 = await fet2.json();
+      this.checkData = data2.Data
+      // let arrdata = []
+      // for (const key in obj) {
+      //   arrdata.push(key)
+      // }
+      // console.log(arrdata[123]);
+  }
   
 }
 </script>
@@ -64,7 +88,8 @@ export default {
           <div class="mt-1 relative rounded-md shadow-md">
             <input
               v-model="ticker"
-              v-on:keydown.enter="add"
+              v-on:keydown.enter="add(ticker.toUpperCase())"
+              @click="addedTickers = false"
               type="text"
               name="wallet"
               id="wallet"
@@ -72,25 +97,25 @@ export default {
               placeholder="Например DOGE"
             />
           </div>
-          <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
-            <span @click="ticker = 'BTC'" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              BTC
+          <div v-if="ticker.length" class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
+            <span @click="add(autocomplite(ticker)[0])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
+              {{ autocomplite(ticker)[0] }}
             </span>
-            <span @click="ticker = 'DOGE'" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              DOGE
+            <span @click="add(autocomplite(ticker)[1])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
+              {{ autocomplite(ticker)[1] }}
             </span>
-            <span @click="ticker = 'BCH'" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              BCH
+            <span @click="add(autocomplite(ticker)[2])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
+              {{ autocomplite(ticker)[2] }}
             </span>
-            <span @click="ticker = 'ETH'" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              ETH
+            <span @click="add(autocomplite(ticker)[3])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
+              {{ autocomplite(ticker)[3] }}
             </span>
           </div>
-          <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
+          <div v-if="addedTickers" class="text-sm text-red-600">Такой тикер уже добавлен</div>
         </div>
       </div>
       <button
-        v-on:click="add"
+        v-on:click="add(ticker.toUpperCase())"
         type="button"
         class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
       >
