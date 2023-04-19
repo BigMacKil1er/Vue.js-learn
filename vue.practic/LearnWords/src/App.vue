@@ -1,5 +1,5 @@
 <script>
-import { loadTicker } from './api'
+import { loadTickers } from './api'
 import { parse } from '@vue/compiler-dom'
 
 export default {
@@ -50,22 +50,21 @@ export default {
     }
   },
   methods: {
+    formarPrice(price){
+      if (price === '-') {
+        return price
+      }
+      return price > 1 ? price.toFixed(2) : price.toPrecision(2)
+    },
     async upadateTickers(){
       if (!this.tickets.length) {
         return;
       }
-        const exchangeData = await loadTicker(this.tickets.map(t => t.name))
+        const exchangeData = await loadTickers(this.tickets.map(t => t.name))
         this.tickets.forEach(ticker => {
           console.log(exchangeData);
           const price = exchangeData[ticker.name.toUpperCase()]
-          
-          if (!price) {
-            ticker.price = '-'
-            return;
-          }
-          const normalizePrice = 1 / price
-          const formattedPrice = normalizePrice > 1 ? normalizePrice.toFixed(2) : normalizePrice.toPrecision(2)
-          ticker.price = formattedPrice
+          ticker.price = price ?? '-'
         })
           // this.tickets.find(item => item.name === tickerName).price = exchangeData.USD > 1 ? exchangeData.USD.toFixed(2) : exchangeData.USD.toPrecision(2)
           // if (this.selectedTicker?.name === tickerName) {
@@ -236,7 +235,7 @@ export default {
                 {{ t.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ t.price }}
+                {{ formarPrice(t.price) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
