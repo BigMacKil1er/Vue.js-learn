@@ -1,5 +1,5 @@
 <script>
-import { loadTickers } from './api'
+import { subscribeToTicker, unsubscribeFromTicker } from './api'
 import { parse } from '@vue/compiler-dom'
 
 export default {
@@ -50,6 +50,9 @@ export default {
     }
   },
   methods: {
+    updateTicker(tickerName, price){
+      this.tickets.find(t => t.name === tickerName).price = price
+    },
     formarPrice(price){
       if (price === '-') {
         return price
@@ -57,15 +60,15 @@ export default {
       return price > 1 ? price.toFixed(2) : price.toPrecision(2)
     },
     async upadateTickers(){
-      if (!this.tickets.length) {
-        return;
-      }
-        const exchangeData = await loadTickers(this.tickets.map(t => t.name))
-        this.tickets.forEach(ticker => {
-          console.log(exchangeData);
-          const price = exchangeData[ticker.name.toUpperCase()]
-          ticker.price = price ?? '-'
-        })
+      // if (!this.tickets.length) {
+      //   return;
+      // }
+      //   const exchangeData = await loadTickers(this.tickets.map(t => t.name))
+      //   this.tickets.forEach(ticker => {
+      //     console.log(exchangeData);
+      //     const price = exchangeData[ticker.name.toUpperCase()]
+      //     ticker.price = price ?? '-'
+      //   })
           // this.tickets.find(item => item.name === tickerName).price = exchangeData.USD > 1 ? exchangeData.USD.toFixed(2) : exchangeData.USD.toPrecision(2)
           // if (this.selectedTicker?.name === tickerName) {
           //   this.graph.push(exchangeData.USD)
@@ -83,15 +86,15 @@ export default {
         this.addedTickers = true
       }
       }
-      
-      
       this.ticker = ''
+      subscribeToTicker(ticker,  newPrice => this.updateTicker(ticker, newPrice))
     },
     del(tickerToRemove) {
       this.tickets = this.tickets.filter(t => t !== tickerToRemove)
       if (this.selectedTicker === tickerToRemove) {
         this.selectedTicker = null
       }
+      unsubscribeFromTicker(tickerToRemove.name)
     },
     select(ticker){
       this.selectedTicker = ticker
@@ -113,8 +116,11 @@ export default {
     const receivedFromLocalStorage = await localStorage.getItem('dataAboutCrypto')
     if (receivedFromLocalStorage) {
       this.tickets = await JSON.parse(receivedFromLocalStorage)
+      this.tickets.forEach(ticker => {
+        subscribeToTicker(ticker.name, newPrice => this.updateTicker(ticker.name, newPrice))
+      })
     }
-    setInterval(this.upadateTickers, 3000)
+    // setInterval(this.upadateTickers, 3000)
       // this.tickets = localStorage.getItem('dataAboutCrypto')
       const fet2 = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`);
       const data2 = await fet2.json();
