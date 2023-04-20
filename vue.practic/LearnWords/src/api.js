@@ -1,4 +1,4 @@
-const API_KEY = `f848f2d3229ba5899139a6dfde19f3e8607c18157e5ebc80067e699238dba276`
+const API_KEY = `b0003d91330495a01e5ae69b7c651343003a7c1f2ab5094141919911deb9025a`
 const tickersHandlers = new Map()
 const AGGREGATE_INDEX = '5'
 
@@ -6,7 +6,7 @@ const socket = new WebSocket(`wss://streamer.cryptocompare.com/v2?api_key=${API_
 
 socket.addEventListener('message', a => {
     const { TYPE: type, FROMSYMBOL: currancy, PRICE: newPrice} = JSON.parse(a.data)
-    if (type !== AGGREGATE_INDEX) {
+    if (type !== AGGREGATE_INDEX || newPrice === undefined) {
         return
     }
     const handlers = tickersHandlers.get(currancy) ?? []
