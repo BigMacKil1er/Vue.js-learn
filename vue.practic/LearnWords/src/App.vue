@@ -62,22 +62,6 @@ export default {
       }
       return price > 1 ? price.toFixed(2) : price.toPrecision(2)
     },
-    async upadateTickers(){
-      // if (!this.tickets.length) {
-      //   return;
-      // }
-      //   const exchangeData = await loadTickers(this.tickets.map(t => t.name))
-      //   this.tickets.forEach(ticker => {
-      //     console.log(exchangeData);
-      //     const price = exchangeData[ticker.name.toUpperCase()]
-      //     ticker.price = price ?? '-'
-      //   })
-          // this.tickets.find(item => item.name === tickerName).price = exchangeData.USD > 1 ? exchangeData.USD.toFixed(2) : exchangeData.USD.toPrecision(2)
-          // if (this.selectedTicker?.name === tickerName) {
-          //   this.graph.push(exchangeData.USD)
-          // }
-          
-    },
     add(ticker) {
       const newTicker = {name: ticker, price: '-'}
       if (ticker.length && (ticker.toUpperCase() in this.checkData)) {
@@ -123,16 +107,9 @@ export default {
         subscribeToTicker(ticker.name, newPrice => this.updateTicker(ticker.name, newPrice))
       })
     }
-    // setInterval(this.upadateTickers, 3000)
-      // this.tickets = localStorage.getItem('dataAboutCrypto')
       const fet2 = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`);
       const data2 = await fet2.json();
       this.checkData = data2.Data
-      // let arrdata = []
-      // for (const key in obj) {
-      //   arrdata.push(key)
-      // }
-      // console.log(arrdata[123]);
   },
   watch: {
     tickets(){
