@@ -52,6 +52,9 @@ export default {
   methods: {
     updateTicker(tickerName, price){
       this.tickets.find(t => t.name === tickerName).price = price
+      if (this.selectedTicker?.name === tickerName) {
+        this.graph.push(price)
+      }
     },
     formarPrice(price){
       if (price === '-') {
