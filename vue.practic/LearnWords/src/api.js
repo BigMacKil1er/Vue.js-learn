@@ -63,16 +63,13 @@ function unsubscribeFromWebSocket(ticker){
 
 export const subscribeToTicker = (ticker, callback) => {
     worker.port.postMessage([ticker])
-    worker.port.onmessage = function(e){
-                    callback(e.data);
-                }
-    fn => fn(newPrice)
-    // const subscribers = tickersHandlers.get(ticker) || []
-    // tickersHandlers.set(ticker, [...subscribers, callback])
-    // subscribeToWebSocket(ticker)
+    const subscribers = tickersHandlers.get(ticker) || []
+    tickersHandlers.set(ticker, [...subscribers, callback])
+
+    subscribeToWebSocket(ticker)
 }
 // export const unsubscribeFromTicker = (ticker, callback) => {
-//     const subscribers = tickersHandlers.get(ticker) || []    
+//     const subscribers = tickersHandlers.get(ticker) || []
 //     tickersHandlers.set(ticker, subscribers.filter(fn = fn !== callback))
 // }
 export const unsubscribeFromTicker = (ticker) => {
