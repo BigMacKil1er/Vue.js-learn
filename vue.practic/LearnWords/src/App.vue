@@ -14,6 +14,7 @@ export default {
       addedTickers: false,
       checkData: null,
       page: 1,
+      maxGraphElements: 1
     }
   },
   computed: {
@@ -50,11 +51,21 @@ export default {
     }
   },
   methods: {
+    calculateMaxGraphElements(){
+      if (!this.$refs.graph) {
+        return
+      }
+      this.maxGraphElements = this.$refs.graph.clientWidth / (this.$refs.graphElement[0].clientWidth ?? 0)
+    },
     updateTicker(tickerName, price){
       this.tickets.find(t => t.name === tickerName).price = price
       if (this.selectedTicker?.name === tickerName) {
-        this.graph.push(price)
+        this.graph.unshift(price)
+        if (this.graph.length > this.maxGraphElements) {
+          this.graph = this.graph.slice(0, this.maxGraphElements)
+        }
       }
+      this.calculateMaxGraphElements()
     },
     formarPrice(price){
       if (price === '-') {
@@ -64,6 +75,8 @@ export default {
     },
     add(ticker) {
       const newTicker = {name: ticker, price: '-'}
+
+
       if (ticker.length && (ticker.toUpperCase() in this.checkData)) {
         if (this.tickets.findIndex(item => item.name === ticker) === -1) {
         this.tickets = [...this.tickets, newTicker]
@@ -84,6 +97,7 @@ export default {
       unsubscribeFromTicker(tickerToRemove.name)
     },
     select(ticker){
+      this.calculateMaxGraphElements()
       this.selectedTicker = ticker
       this.graph = []
     },
@@ -110,6 +124,12 @@ export default {
       const fet2 = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`);
       const data2 = await fet2.json();
       this.checkData = data2.Data
+  },
+  mounted() {
+    window.addEventListener('resize', this.calculateMaxGraphElements)
+  },
+  beforeMount(){
+    window.removeEventListener('resize', this.calculateMaxGraphElements)
   },
   watch: {
     tickets(){
@@ -253,12 +273,14 @@ export default {
       <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
         {{ selectedTicker.name }} - USD
       </h3>
-      <div class="flex items-end border-gray-600 border-b border-l h-64">
+      <div class="flex items-end border-gray-600 border-b border-l h-64" ref="graph">
         <div
           v-for="(bar, idx) in getPercentsFromGraph"
           :key="idx"
           :style="{ height: `${bar}%` }"
-          class="bg-purple-800 border w-10"
+          ref="graphElement"
+          style="min-width: 40px"
+          class="bg-purple-800 border"
         ></div>
       </div>
       <button
