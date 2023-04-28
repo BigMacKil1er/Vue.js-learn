@@ -14,7 +14,8 @@ export default {
       addedTickers: false,
       checkData: null,
       page: 1,
-      maxGraphElements: 1
+      maxGraphElements: 1,
+      sizeGraphElement: null
     }
   },
   computed: {
@@ -55,7 +56,9 @@ export default {
       if (!this.$refs.graph) {
         return
       }
-      this.maxGraphElements = this.$refs.graph.clientWidth / (this.$refs.graphElement[0].clientWidth ?? 0)
+      console.log(this.$refs.graphElement?.at(-1)?.clientWidth);
+      this.sizeGraphElement = this.$refs.graphElement?.at(-1)?.clientWidth ? this.$refs.graphElement?.at(-1)?.clientWidth : this.sizeGraphElement
+      this.maxGraphElements = this.$refs.graph.clientWidth / this.sizeGraphElement
     },
     updateTicker(tickerName, price){
       this.tickets.find(t => t.name === tickerName).price = price
@@ -75,8 +78,6 @@ export default {
     },
     add(ticker) {
       const newTicker = {name: ticker, price: '-'}
-
-
       if (ticker.length && (ticker.toUpperCase() in this.checkData)) {
         if (this.tickets.findIndex(item => item.name === ticker) === -1) {
         this.tickets = [...this.tickets, newTicker]
@@ -97,7 +98,6 @@ export default {
       unsubscribeFromTicker(tickerToRemove.name)
     },
     select(ticker){
-      this.calculateMaxGraphElements()
       this.selectedTicker = ticker
       this.graph = []
     },
@@ -132,6 +132,10 @@ export default {
     window.removeEventListener('resize', this.calculateMaxGraphElements)
   },
   watch: {
+    // is not working yet
+    // selectedTicker(){
+    //   this.$nextTick(this.calculateMaxGraphElements)
+    // },  
     tickets(){
       localStorage.setItem('dataAboutCrypto', JSON.stringify(this.tickets))
     },
