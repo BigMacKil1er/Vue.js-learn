@@ -1,24 +1,32 @@
 <script>
 import { subscribeToTicker, unsubscribeFromTicker } from './api'
 import { parse } from '@vue/compiler-dom'
-
+import AddTicker from './components/AddTicker.vue'
+import TrashIcon from './components/visual/TrashIcon.vue'
 export default {
   name: 'App',
   data(){
     return {
-      ticker: "",
       filter: '',
       tickets: [],
       graph: [],
       selectedTicker: null,
-      addedTickers: false,
+      // addedTickers: false,
       checkData: null,
       page: 1,
       maxGraphElements: 1,
-      sizeGraphElement: null
+      sizeGraphElement: null,
+      checkData: null
     }
   },
+  components: {
+    AddTicker,
+    TrashIcon
+  },
   computed: {
+    toManyTickersAdded(){
+      return this.tickets.length > 4
+    },
     startIndex(){
       return (this.page-1) * 6
     },
@@ -56,7 +64,6 @@ export default {
       if (!this.$refs.graph) {
         return
       }
-      console.log(this.$refs.graphElement?.at(-1)?.clientWidth);
       this.sizeGraphElement = this.$refs.graphElement?.at(-1)?.clientWidth ? this.$refs.graphElement?.at(-1)?.clientWidth : this.sizeGraphElement
       this.maxGraphElements = this.$refs.graph.clientWidth / this.sizeGraphElement
     },
@@ -78,16 +85,8 @@ export default {
     },
     add(ticker) {
       const newTicker = {name: ticker, price: '-'}
-      if (ticker.length && (ticker.toUpperCase() in this.checkData)) {
-        if (this.tickets.findIndex(item => item.name === ticker) === -1) {
-        this.tickets = [...this.tickets, newTicker]
-        this.filter = ''
-        this.addedTickers = false
-      } else {
-        this.addedTickers = true
-      }
-      }
-      this.ticker = ''
+      this.tickets = [...this.tickets, newTicker]
+      this.filter = ''
       subscribeToTicker(ticker,  newPrice => this.updateTicker(ticker, newPrice))
     },
     del(tickerToRemove) {
@@ -101,10 +100,6 @@ export default {
       this.selectedTicker = ticker
       this.graph = []
     },
-    autocomplite(ticker){
-      let fil = Object.keys(this.checkData).filter(item => item.indexOf(ticker.toUpperCase()) !== -1)
-      return fil.sort((a, b) => a.length - b.length)
-    }
   },
   created: async function () {
     const windowData = Object.fromEntries(new URL(window.location).searchParams.entries())
@@ -121,9 +116,6 @@ export default {
         subscribeToTicker(ticker.name, newPrice => this.updateTicker(ticker.name, newPrice))
       })
     }
-      const fet2 = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`);
-      const data2 = await fet2.json();
-      this.checkData = data2.Data
   },
   mounted() {
     window.addEventListener('resize', this.calculateMaxGraphElements)
@@ -132,10 +124,9 @@ export default {
     window.removeEventListener('resize', this.calculateMaxGraphElements)
   },
   watch: {
-    // is not working yet
-    // selectedTicker(){
+    // sizeGraphElement(){
     //   this.$nextTick(this.calculateMaxGraphElements)
-    // },  
+    // },
     tickets(){
       localStorage.setItem('dataAboutCrypto', JSON.stringify(this.tickets))
     },
@@ -165,62 +156,8 @@ export default {
       <!-- </svg> -->
     <!-- </div> -->
   <div class="container">
-    <section>
-      <div class="flex">
-        <div class="max-w-xs">
-          <label for="wallet" class="block text-sm font-medium text-gray-700"
-            >Тикер</label
-          >
-          <div class="mt-1 relative rounded-md shadow-md">
-            <input
-              v-model="ticker"
-              v-on:keydown.enter="add(ticker.toUpperCase())"
-              @click="addedTickers = false"
-              type="text"
-              name="wallet"
-              id="wallet"
-              class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
-              placeholder="Например DOGE"
-            />
-          </div>
-          <div v-if="ticker.length" class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
-            <span @click="add(autocomplite(ticker)[0])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              {{ autocomplite(ticker)[0] }}
-            </span>
-            <span @click="add(autocomplite(ticker)[1])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              {{ autocomplite(ticker)[1] }}
-            </span>
-            <span @click="add(autocomplite(ticker)[2])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              {{ autocomplite(ticker)[2] }}
-            </span>
-            <span @click="add(autocomplite(ticker)[3])" class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              {{ autocomplite(ticker)[3] }}
-            </span>
-          </div>
-          <div v-if="addedTickers" class="text-sm text-red-600">Такой тикер уже добавлен</div>
-        </div>
-      </div>
-      <button
-        v-on:click="add(ticker.toUpperCase())"
-        type="button"
-        class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-      >
-        <!-- Heroicon name: solid/mail -->
-        <svg
-          class="-ml-0.5 mr-2 h-6 w-6"
-          xmlns="http://www.w3.org/2000/svg"
-          width="30"
-          height="30"
-          viewBox="0 0 24 24"
-          fill="#ffffff"
-        >
-          <path
-            d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-          ></path>
-        </svg>
-        Добавить
-      </button>
-    </section>
+    <!-- Here is the component that adds the ticker -->
+      <add-ticker @add-ticker="add" :tickets="tickets" :disabled="toManyTickersAdded" />
       <template v-if="tickets.length">
         <hr class="w-full border-t border-gray-600 my-4" />
         <div>
@@ -292,27 +229,7 @@ export default {
         type="button"
         class="absolute top-0 right-0"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          xmlns:xlink="http://www.w3.org/1999/xlink"
-          xmlns:svgjs="http://svgjs.com/svgjs"
-          version="1.1"
-          width="30"
-          height="30"
-          x="0"
-          y="0"
-          viewBox="0 0 511.76 511.76"
-          style="enable-background:new 0 0 512 512"
-          xml:space="preserve"
-        >
-          <g>
-            <path
-              d="M436.896,74.869c-99.84-99.819-262.208-99.819-362.048,0c-99.797,99.819-99.797,262.229,0,362.048    c49.92,49.899,115.477,74.837,181.035,74.837s131.093-24.939,181.013-74.837C536.715,337.099,536.715,174.688,436.896,74.869z     M361.461,331.317c8.341,8.341,8.341,21.824,0,30.165c-4.16,4.16-9.621,6.251-15.083,6.251c-5.461,0-10.923-2.091-15.083-6.251    l-75.413-75.435l-75.392,75.413c-4.181,4.16-9.643,6.251-15.083,6.251c-5.461,0-10.923-2.091-15.083-6.251    c-8.341-8.341-8.341-21.845,0-30.165l75.392-75.413l-75.413-75.413c-8.341-8.341-8.341-21.845,0-30.165    c8.32-8.341,21.824-8.341,30.165,0l75.413,75.413l75.413-75.413c8.341-8.341,21.824-8.341,30.165,0    c8.341,8.32,8.341,21.824,0,30.165l-75.413,75.413L361.461,331.317z"
-              fill="#718096"
-              data-original="#000000"
-            ></path>
-          </g>
-        </svg>
+        <trash-icon />
       </button>
     </section>
   </div>
